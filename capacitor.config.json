@@ -1,0 +1,10 @@
+{
+  "appId": "com.rqeim.app",
+  "appName": "rqeim",
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false
+    }
+  }
+}
