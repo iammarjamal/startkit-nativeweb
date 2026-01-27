@@ -16,14 +16,16 @@ import { initializeAppLifeCycle } from './js/composables/useLifeCycle';
 import router from './js/router';
 import App from '@/app.vue';
 
-// Flutter Native Animation - Auto detects iOS/Android and applies appropriate transition
-import { flutterNativeAnimation } from '@/plugins/transition';
+// Flutter Native Animation
+import { flutterNativeAnimation, setLowPowerMode } from '@/plugins/transition';
+
+// Power Mode Plugin (Capacitor)
+import { PowerMode } from 'power-mode';
 
 // Initialize theme and language BEFORE Vue app is created
-// This prevents FOUC (Flash of Unstyled Content)
 const { language } = initializeAppLifeCycle();
 
-// Create i18n with the detected/stored language
+// Create i18n
 const i18n = createI18n({
   legacy: false,
   locale: language,
@@ -34,18 +36,33 @@ const i18n = createI18n({
 const isIOS = isPlatform('ios');
 const isAndroid = isPlatform('android');
 
+// Initialize Power Mode Detection
+async function initPowerMode() {
+  try {
+    const { lowPowerModeEnabled } = await PowerMode.lowPowerModeEnabled();
+    setLowPowerMode(lowPowerModeEnabled);
+    console.log('[PowerMode] Low Power Mode:', lowPowerModeEnabled);
+  } catch (error) {
+    // Plugin not available (web/desktop)
+    setLowPowerMode(false);
+  }
+}
+
+// Check power mode on app start
+initPowerMode();
+
 // Create Vue app with Ionic configuration
 const app = createApp(App)
   .use(IonicVue, {
-    // Flutter-style native animation (auto-detects iOS/Android)
+    // Flutter-style native animation (auto-detects iOS/Android + Power Mode)
     navAnimation: flutterNativeAnimation,
-    // Disable ripple for cleaner transitions (or enable on Android only)
+    // Ripple effect (Android only)
     rippleEffect: isAndroid,
     // Smoother transitions
     animated: true,
     // Hardware back button (Android only)
     hardwareBackButton: isAndroid,
-    // Swipe to go back (iOS only - like native iOS behavior)
+    // Swipe to go back (iOS only)
     swipeBackEnabled: isIOS,
   })
   .use(router)
