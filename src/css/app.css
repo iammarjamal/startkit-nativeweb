@@ -19,9 +19,11 @@
 /* Custom Variants */
 @custom-variant dark (&:is(.dark *));
 
-@custom-variant ios (&:is(.ios *));
+@custom-variant web (&:is(.plt-desktop *));
 
-@custom-variant android (&:is(.md *));
+@custom-variant ios (&:is(.plt-ios *));
+
+@custom-variant android (&:is(.plt-android *));
 
 * {
     font-family: 'IBM Plex Sans Arabic', sans-serif !important;
