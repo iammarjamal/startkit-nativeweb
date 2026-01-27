@@ -93,26 +93,28 @@ const FADE_FWD_OFFSET = 20;          // 20% horizontal slide
 // VERSION DETECTION
 // ============================================================================
 
-interface PlatformInfo {
-  platform: 'ios' | 'android' | 'desktop';
-  version: number;
+// ============================================================================
+// MOTION PREFERENCES & UTILITIES
+// ============================================================================
+
+// Respect OS-level "Reduce Motion" setting
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let isReducedMotion = prefersReducedMotion.matches;
+
+// Listen for changes in OS settings
+prefersReducedMotion.addEventListener('change', (e) => {
+  isReducedMotion = e.matches;
+});
+
+// Check for "Low Power Mode" or accessibility setting
+function shouldReduceMotion(): boolean {
+  return isReducedMotion || isLowPowerMode;
 }
 
-function detectPlatform(): PlatformInfo {
-  const platforms = getPlatforms();
-  const ua = navigator.userAgent;
-  
-  if (platforms.includes('ios') || /iPhone|iPad|iPod/.test(ua)) {
-    const match = ua.match(/OS (\d+)/);
-    return { platform: 'ios', version: match ? parseInt(match[1]) : 17 };
-  }
-  
-  if (platforms.includes('android') || /Android/.test(ua)) {
-    const match = ua.match(/Android (\d+)/);
-    return { platform: 'android', version: match ? parseInt(match[1]) : 14 };
-  }
-  
-  return { platform: 'desktop', version: 0 };
+// Improved Platform Detection (using Ionic utilities + Feature Detection)
+function getAndroidVersion(ua: string): number {
+  const match = ua.match(/Android (\d+)/);
+  return match ? parseInt(match[1]) : 0;
 }
 
 // ============================================================================
@@ -156,12 +158,13 @@ function createIOSTransition(
   enteringEl: HTMLElement,
   leavingEl: HTMLElement,
   isBack: boolean,
-  isRTL: boolean
+  isRTL: boolean,
+  isGesture: boolean = false
 ): Animation {
   // SYMMETRIC EASING on ROOT only - ensures perfect bounce-back when swipe cancelled
   const root = createAnimation()
     .duration(IOS_DURATION)
-    .easing('cubic-bezier(0.32, 0.72, 0, 1)');
+    .easing(isGesture ? 'cubic-bezier(0.1, 0.1, 0.1, 1.0)' : 'cubic-bezier(0.32, 0.72, 0, 1)');
   
   const enterPage = enteringEl?.querySelector(':scope > .ion-page') || enteringEl;
   const leavePage = leavingEl?.querySelector(':scope > .ion-page') || leavingEl;
@@ -440,7 +443,7 @@ function createAndroidFadeForwardsTransition(
 }
 
 // ============================================================================
-// MAIN EXPORT: Auto-Detect Platform & Version
+// MAIN TRANSITION FACTORY
 // ============================================================================
 
 /**
@@ -465,47 +468,76 @@ export const flutterNativeAnimation = (baseEl: HTMLElement, opts: any): Animatio
   const enteringEl = opts.enteringEl as HTMLElement;
   const leavingEl = opts.leavingEl as HTMLElement;
   
-  // LOW POWER MODE: Use minimal animation to save battery
-  if (isLowPowerMode) {
+  // 1. Accessibility & Performance Check
+  if (shouldReduceMotion()) {
     return createLowPowerTransition(enteringEl, leavingEl);
   }
   
+  // 2. Platform Detection
+  const platforms = getPlatforms();
+  const isIOS = platforms.includes('ios') || platforms.includes('ipad') || platforms.includes('iphone');
+  const isAndroid = platforms.includes('android');
+  const isDesktop = platforms.includes('desktop');
+  
+  // 3. Direction & RTL
   const isRTL = document.documentElement.dir === 'rtl';
   const isBack = opts.direction === 'back';
-  const { platform, version } = detectPlatform();
   
-  // iOS - always Cupertino (with optimized swipe completion)
-  if (platform === 'ios' || platform === 'desktop') {
-    return createIOSTransition(enteringEl, leavingEl, isBack, isRTL);
+  // 4. Strategy Selection
+  
+  // iOS / Desktop / iPads (often mimic desktop)
+  if (isIOS || isDesktop) {
+    // Check if this is a swipe gesture (linear tracking needed)
+    // Ionic's router outlet passes 'progressAnimation' for gestures
+    const isGesture: boolean = opts.progressAnimation === true;
+    return createIOSTransition(enteringEl, leavingEl, isBack, isRTL, isGesture);
   }
   
-  // Android - version-specific
-  if (version >= 14) {
-    return createAndroidFadeForwardsTransition(enteringEl, leavingEl, isBack, isRTL);
-  } else if (version >= 10) {
-    return createAndroidZoomTransition(enteringEl, leavingEl, isBack);
-  } else if (version === 9) {
-    return createAndroidOpenUpTransition(enteringEl, leavingEl, isBack);
-  } else {
+  // Android Specific Versions
+  if (isAndroid) {
+    const ua = navigator.userAgent;
+    const version = getAndroidVersion(ua);
+    
+    // Modern Android (14+): Predictive Back / FadeForwards
+    if (version >= 14) {
+      return createAndroidFadeForwardsTransition(enteringEl, leavingEl, isBack, isRTL);
+    }
+    // Zoom Transition (Android 10-13)
+    if (version >= 10) {
+      return createAndroidZoomTransition(enteringEl, leavingEl, isBack);
+    }
+    // Pie (9): OpenUpwards
+    if (version === 9) {
+      return createAndroidOpenUpTransition(enteringEl, leavingEl, isBack);
+    }
+    // Older Android (8 and below): FadeUpwards
     return createAndroidFadeUpTransition(enteringEl, leavingEl, isBack);
   }
+  
+  // Fallback
+  return createAndroidFadeUpTransition(enteringEl, leavingEl, isBack);
 };
 
-// Specific exports for manual selection
+// ============================================================================
+// MANUAL EXPORTS
+// ============================================================================
+
 export const flutterCupertinoAnimation = (baseEl: HTMLElement, opts: any): Animation => {
-  if (isLowPowerMode) return createLowPowerTransition(opts.enteringEl, opts.leavingEl);
+  if (shouldReduceMotion()) return createLowPowerTransition(opts.enteringEl, opts.leavingEl);
   const isRTL = document.documentElement.dir === 'rtl';
-  return createIOSTransition(opts.enteringEl, opts.leavingEl, opts.direction === 'back', isRTL);
+  // Check gesture status from options
+  const isGesture = opts.progressAnimation === true;
+  return createIOSTransition(opts.enteringEl, opts.leavingEl, opts.direction === 'back', isRTL, isGesture);
 };
 
 export const flutterMaterialAnimation = (baseEl: HTMLElement, opts: any): Animation => {
-  if (isLowPowerMode) return createLowPowerTransition(opts.enteringEl, opts.leavingEl);
+  if (shouldReduceMotion()) return createLowPowerTransition(opts.enteringEl, opts.leavingEl);
   const isRTL = document.documentElement.dir === 'rtl';
   return createAndroidFadeForwardsTransition(opts.enteringEl, opts.leavingEl, opts.direction === 'back', isRTL);
 };
 
 export const flutterZoomAnimation = (baseEl: HTMLElement, opts: any): Animation => {
-  if (isLowPowerMode) return createLowPowerTransition(opts.enteringEl, opts.leavingEl);
+  if (shouldReduceMotion()) return createLowPowerTransition(opts.enteringEl, opts.leavingEl);
   return createAndroidZoomTransition(opts.enteringEl, opts.leavingEl, opts.direction === 'back');
 };
 
