@@ -11,10 +11,13 @@ import './css/app.css'
 
 import { createApp } from 'vue'
 import { createI18n } from 'vue-i18n';
-import { IonicVue } from '@ionic/vue';
+import { IonicVue, isPlatform } from '@ionic/vue';
 import { initializeAppLifeCycle } from './js/composables/useLifeCycle';
 import router from './js/router';
 import App from '@/app.vue';
+
+// Flutter Native Animation - Auto detects iOS/Android and applies appropriate transition
+import { flutterNativeAnimation } from '@/plugins/transition';
 
 // Initialize theme and language BEFORE Vue app is created
 // This prevents FOUC (Flash of Unstyled Content)
@@ -27,13 +30,28 @@ const i18n = createI18n({
   fallbackLocale: 'ar',
 });
 
-// Create Vue app
+// Platform-specific settings
+const isIOS = isPlatform('ios');
+const isAndroid = isPlatform('android');
+
+// Create Vue app with Ionic configuration
 const app = createApp(App)
-  .use(IonicVue)
+  .use(IonicVue, {
+    // Flutter-style native animation (auto-detects iOS/Android)
+    navAnimation: flutterNativeAnimation,
+    // Disable ripple for cleaner transitions (or enable on Android only)
+    rippleEffect: isAndroid,
+    // Smoother transitions
+    animated: true,
+    // Hardware back button (Android only)
+    hardwareBackButton: isAndroid,
+    // Swipe to go back (iOS only - like native iOS behavior)
+    swipeBackEnabled: isIOS,
+  })
   .use(router)
   .use(i18n);
 
-// Mount app
+// Mount app after router is ready
 router.isReady().then(() => {
   app.mount('#app');
 });

@@ -2,9 +2,13 @@
   "appId": "com.rqeim.app",
   "appName": "rqeim",
   "webDir": "dist",
+  "server":{
+    "url":"http://192.168.1.37:5173",
+    "cleartext": true
+  },
   "plugins": {
     "SplashScreen": {
-      "launchAutoHide": false
+      "launchAutoHide": true
     }
   }
 }

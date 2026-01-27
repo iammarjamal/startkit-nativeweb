@@ -62,7 +62,7 @@ const btnAnim = {
 </script>
 
 <template>
-    <Screen>
+    <Screen :canBack="true">
         <Motion class="flex pb-24 h-full items-center justify-center px-4" :initial="cardAnim.initial"
             :animate="cardAnim.animate">
             <Card class="w-full max-w-md border-none bg-transparent shadow-none">
@@ -115,7 +115,7 @@ const btnAnim = {
                             <Button type="submit" :disabled="form.processing" size="lg"
                                 class="h-12 w-full bg-gradient-to-r from-primary to-primary/90 text-base font-semibold shadow-lg transition-all hover:from-primary/90 hover:to-primary hover:shadow-xl disabled:opacity-50">
                                 <span class="flex-1 text-start">{{ form.processing ? t('sending') : t('send')
-                                    }}</span>
+                                }}</span>
                                 <Spinner v-if="form.processing" />
                                 <Icon v-else icon="solar:plain-2-bold" class="size-5" />
                             </Button>
@@ -134,7 +134,7 @@ const btnAnim = {
                         class="mt-6 flex items-center justify-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
                         <Icon icon="solar:shield-warning-bold" class="size-4 text-amber-600 dark:text-amber-400" />
                         <span class="text-xs font-medium text-amber-700 dark:text-amber-300">{{ t('tip')
-                            }}</span>
+                        }}</span>
                     </Motion>
                 </CardContent>
             </Card>

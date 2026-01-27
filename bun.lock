@@ -6,6 +6,7 @@
       "name": "capacitor-app",
       "dependencies": {
         "@capacitor/android": "^8.0.1",
+        "@capacitor/app": "^8.0.0",
         "@capacitor/camera": "^8.0.0",
         "@capacitor/core": "^8.0.1",
         "@capacitor/ios": "^8.0.1",
@@ -26,6 +27,7 @@
         "lucide-vue-next": "^0.563.0",
         "motion-v": "^1.10.2",
         "nprogress": "^0.2.0",
+        "power-mode": "^5.0.0",
         "reka-ui": "^2.7.0",
         "tailwind-merge": "^3.4.0",
         "vaul-vue": "^0.4.1",
@@ -266,6 +268,8 @@
     "@canvas/image-data": ["@canvas/image-data@1.1.0", "", {}, "sha512-QdObRRjRbcXGmM1tmJ+MrHcaz1MftF2+W7YI+MsphnsCrmtyfS0d5qJbk0MeSbUeyM/jCb0hmnkXPsy026L7dA=="],
 
     "@capacitor/android": ["@capacitor/android@8.0.1", "", { "peerDependencies": { "@capacitor/core": "^8.0.0" } }, "sha512-Mrk2MFKSg9YA4BPLKm03wwFnGKcvzNBERUTcxjW1NkLrF6YhJwygAT69f/YGopFvOhhqdnDPsuZuASUfmpkSpw=="],
+
+    "@capacitor/app": ["@capacitor/app@8.0.0", "", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-OwzIkUs4w433Bu9WWAEbEYngXEfJXZ9Wmdb8eoaqzYBgB0W9/3Ed/mh6sAYPNBAZlpyarmewgP7Nb+d3Vrh+xA=="],
 
     "@capacitor/camera": ["@capacitor/camera@8.0.0", "", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-Iu8j2oxoIhY2mLuoEckbL7PFgw1XFm1nqmeWdIkILpcT3H9A+BrSDUDlzWqM/EeaDKo6JnhR59tYHwUhOdXaUg=="],
 
@@ -1582,6 +1586,8 @@
     "postcss-selector-parser": ["postcss-selector-parser@6.0.10", "", { "dependencies": { "cssesc": "^3.0.0", "util-deprecate": "^1.0.2" } }, "sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w=="],
 
     "postcss-styl": ["postcss-styl@0.12.3", "", { "dependencies": { "debug": "^4.1.1", "fast-diff": "^1.2.0", "lodash.sortedlastindex": "^4.1.0", "postcss": "^7.0.27 || ^8.0.0", "stylus": "^0.57.0" } }, "sha512-8I7Cd8sxiEITIp32xBK4K/Aj1ukX6vuWnx8oY/oAH35NfQI4OZaY5nd68Yx8HeN5S49uhQ6DL0rNk0ZBu/TaLg=="],
+
+    "power-mode": ["power-mode@5.0.0", "", { "peerDependencies": { "@capacitor/core": "^5.0.0" } }, "sha512-8hqYLd2VLmmbO9v2z1X6GeSVv7V7BrFyiRhl9MaBvlko6SjYmJKh14d6tO4E8q+V6V30nYzHFhCCWwaEOHojyQ=="],
 
     "prelude-ls": ["prelude-ls@1.2.1", "", {}, "sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g=="],
 

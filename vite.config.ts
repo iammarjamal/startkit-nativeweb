@@ -27,7 +27,7 @@ export default defineConfig({
                     { '@inertiajs/vue3': ['useForm', 'usePage', 'Head', 'Link'] },
                     { 'vue-i18n': ['useI18n'] },
                 ],
-                dts: 'resources/js/types/auto-imports.d.ts',
+                dts: 'src/js/types/auto-imports.d.ts',
             }),
             VueI18nPlugin({
                 include: path.resolve(dirname(fileURLToPath(import.meta.url)), './locales/**'),

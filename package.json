@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.0.1",
+    "@capacitor/app": "^8.0.0",
     "@capacitor/camera": "^8.0.0",
     "@capacitor/core": "^8.0.1",
     "@capacitor/ios": "^8.0.1",
@@ -37,6 +38,7 @@
     "lucide-vue-next": "^0.563.0",
     "motion-v": "^1.10.2",
     "nprogress": "^0.2.0",
+    "power-mode": "^5.0.0",
     "reka-ui": "^2.7.0",
     "tailwind-merge": "^3.4.0",
     "vaul-vue": "^0.4.1",
