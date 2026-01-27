@@ -38,6 +38,17 @@ export default defineConfig({
     outDir: '../dist',
     minify: false,
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@ionic') || id.includes('@capacitor')) return 'core-ionic';
+            if (id.includes('vue')) return 'core-vue';
+            return 'vendor';
+          }
+        },
+      },
+    },
   },
   resolve: {
     alias: {

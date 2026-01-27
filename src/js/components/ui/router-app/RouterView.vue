@@ -1,69 +1,48 @@
 <script setup lang="ts">
-import { IonRouterOutlet } from '@ionic/vue';
-import { useMediaQuery } from '@vueuse/core';
-import { useRouter, useRoute } from 'vue-router';
+import { IonApp, IonRouterOutlet } from '@ionic/vue';
+import { useRouter } from 'vue-router';
 import { onMounted, onUnmounted, nextTick, ref } from 'vue';
+import { Capacitor } from '@capacitor/core'; // 1. استيراد كابستور
 
-// Media Query: Desktop Detection
-const isDesktop = useMediaQuery('(min-width: 1024px)');
+// 2. التحقق الجذري: هل نحن في تطبيق نيتف أم متصفح؟
+// true = iOS/Android App (IPA/APK)
+// false = Mobile Web / Desktop Web / PWA
+const isNativeApp = Capacitor.isNativePlatform();
+
 const router = useRouter();
-
-// State to track navigation direction
-const transitionDirection = ref<'forward' | 'back'>('forward');
 
 let removeGuard: (() => void) | undefined;
 
 onMounted(() => {
-    // Intercept Navigation
-    removeGuard = router.afterEach(async (to, from) => {
-        // 1. Skip if not desktop or API not supported
-        if (!isDesktop.value || !document.startViewTransition) {
-            return;
-        }
-
-        // 2. Determine Direction
-        // Simple logic: Compare path depth or use history state if available
-        // For accurate detection, you might need a custom history tracker
-        const toDepth = to.path.split('/').length;
-        const fromDepth = from.path.split('/').length;
-        transitionDirection.value = toDepth < fromDepth ? 'back' : 'forward';
-
-        // Update CSS Variable for direction BEFORE transition starts
-        document.documentElement.style.setProperty(
-            '--transition-direction',
-            transitionDirection.value === 'back' ? '-1' : '1'
-        );
-
-        // 3. Trigger Transition
-        // We wrap the DOM update manually. Since we are in 'afterEach', 
-        // the router has already updated the state, but Vue hasn't flushed DOM yet.
-        await nextTick();
-
-        // Note: In 'afterEach', the DOM might already be patching. 
-        // For ViewTransitions, typically 'beforeResolve' allows capturing 'old' state better.
-        // However, forcing a transition on the *rendering* phase is key.
-    });
-
-    // Better approach for View Transitions + Router:
-    // We override the resolve mechanism to capture state BEFORE the switch.
-    const originalResolve = router.beforeResolve;
+    // إعداد Guard للتعامل مع الويب فقط
     removeGuard = router.beforeResolve(async (to, from, next) => {
-        if (!isDesktop.value || !document.startViewTransition) {
+
+        // --- NATIVE GUARD ---
+        // إذا كان تطبيق نيتف، لا تتدخل، اترك IonRouterOutlet يقوم بعمله
+        if (isNativeApp) {
             next();
             return;
         }
 
-        // Detect Direction (Basic logic, enhance as needed)
-        // Assuming you have navigation history logic, otherwise default to forward
-        const isBack = router.options.history.state.back === to.fullPath;
+        // --- WEB GUARD (Mobile & Desktop) ---
+        // إذا المتصفح لا يدعم الحركات الحديثة، مرر التنقل فوراً
+        if (!document.startViewTransition) {
+            next();
+            return;
+        }
+
+        // 3. منطق الاتجاه (للويب فقط)
+        // هذا يعطي حركة "سلايد" لطيفة حتى في متصفح الجوال
+        const previousPath = router.options.history.state.back;
+        const isBack = previousPath === to.fullPath;
         const dir = isBack ? -1 : 1;
+
         document.documentElement.style.setProperty('--transition-direction', dir.toString());
 
-        // Start Transition
+        // بدء الترانزيشن الخاص بالمتصفح
         const transition = document.startViewTransition(async () => {
-            // This callback is where the DOM changes happen
             next();
-            await nextTick(); // Wait for Vue to render the new route
+            await nextTick();
         });
 
         await transition.finished;
@@ -76,72 +55,79 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <ion-router-outlet v-if="!isDesktop" />
+    <ion-app>
+        <ion-router-outlet v-if="isNativeApp" :animated="true" />
 
-    <div v-else class="desktop-router-view">
-        <router-view v-slot="{ Component }">
-            <component :is="Component" />
-        </router-view>
-    </div>
+        <div v-else class="web-router-view">
+            <router-view v-slot="{ Component }">
+                <component :is="Component" />
+            </router-view>
+        </div>
+    </ion-app>
 </template>
 
 <style>
 /* ============================================================================
-   DESKTOP VIEW TRANSITIONS
+   WEB VIEW TRANSITIONS (Mobile Web + Desktop)
    ============================================================================
+   تم إزالة الميديا كويري (min-width) ليعمل الانيميشن اللطيف
+   على متصفح الجوال أيضاً (مثل السفاري والكروم)
 */
 
-@media (min-width: 1024px) {
-    /* Control the Animation Group */
-    ::view-transition-group(page-content) {
-        animation-duration: 0.3s;
-        animation-timing-function: var(--transition-ease);
+/* تعريف المتغيرات الافتراضية */
+:root {
+    --transition-offset: 20px;
+    /* مسافة حركة قصيرة وناعمة */
+    --transition-ease: cubic-bezier(0.2, 0.0, 0.0, 1.0);
+    /* حركة فخمة */
+}
+
+/* تطبيق الانيميشن فقط إذا لم يكن تطبيق نيتف 
+   (رغم أن v-if يمنع ذلك، لكن لزيادة الأمان في الـ CSS)
+*/
+.web-router-view {
+    view-transition-name: page-content;
+    width: 100%;
+    height: 100%;
+}
+
+::view-transition-group(page-content) {
+    animation-duration: 0.3s;
+    animation-timing-function: var(--transition-ease);
+}
+
+::view-transition-old(page-content) {
+    animation: 0.3s var(--transition-ease) both fade-out-slide;
+    mix-blend-mode: plus-lighter;
+}
+
+::view-transition-new(page-content) {
+    animation: 0.3s var(--transition-ease) both fade-in-slide;
+    mix-blend-mode: plus-lighter;
+}
+
+@keyframes fade-out-slide {
+    from {
+        opacity: 1;
+        transform: translateY(0);
     }
 
-    /* OLD Page (Leaving) */
-    ::view-transition-old(page-content) {
-        animation: 0.3s var(--transition-ease) both fade-out-slide;
-        /* Avoid grey overlap background issues */
-        mix-blend-mode: plus-lighter;
+    to {
+        opacity: 0;
+        transform: translateY(calc(var(--transition-offset) * -1 * var(--transition-direction)));
+        filter: blur(4px);
+    }
+}
+
+@keyframes fade-in-slide {
+    from {
+        opacity: 0;
+        transform: translateY(calc(var(--transition-offset) * var(--transition-direction)));
     }
 
-    /* NEW Page (Entering) */
-    ::view-transition-new(page-content) {
-        animation: 0.3s var(--transition-ease) both fade-in-slide;
-        mix-blend-mode: plus-lighter;
-    }
-
-    /* DYNAMIC KEYFRAMES 
-       We use calc() with the CSS variable to flip direction automatically
-    */
-    @keyframes fade-out-slide {
-        from {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        to {
-            opacity: 0;
-            /* If direction is 1 (Forward), Old page moves Left (-30px) */
-            /* If direction is -1 (Back), Old page moves Right (+30px) */
-            transform: translateX(calc(var(--transition-offset) * -1 * var(--transition-direction)));
-            filter: blur(5px);
-            /* Add subtle blur for depth */
-        }
-    }
-
-    @keyframes fade-in-slide {
-        from {
-            opacity: 0;
-            /* If direction is 1 (Forward), New page comes from Right (+30px) */
-            /* If direction is -1 (Back), New page comes from Left (-30px) */
-            transform: translateX(calc(var(--transition-offset) * var(--transition-direction)));
-        }
-
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 </style>

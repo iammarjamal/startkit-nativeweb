@@ -322,28 +322,60 @@ export const flutterNativeAnimation: AnimationBuilder = (baseEl: any, opts: any)
     progressAnimation: opts.progressAnimation
   };
 
-  if (shouldReduceMotion()) return createLowPowerTransition(transitionOpts);
+  // 1. Accessibility & Low Power Check
+  if (shouldReduceMotion()) {
+    return createLowPowerTransition(transitionOpts);
+  }
 
   const isGesture = transitionOpts.progressAnimation === true;
   const isRTL = document.documentElement.dir === 'rtl';
-  const platform = Capacitor.getPlatform();
+  
+  // 🔥 THE FIX: Strict Native Check 🔥
+  // Capacitor.isNativePlatform() returns true ONLY for compiled iOS/Android apps.
+  // It returns false for Mobile Web / PWA.
+  const isNative = Capacitor.isNativePlatform();
+  const platform = Capacitor.getPlatform(); // 'ios', 'android', 'web'
 
-  // Desktop/PWA use ViewTransitions (Native Browser Snapshots)
-  if (!isGesture && platform === 'web' && 'startViewTransition' in document) {
-    return createViewTransitionWrapper(transitionOpts);
+  // ==========================================================
+  // A. WEB STRATEGY (Browser / PWA)
+  // Goal: Feel like a normal website. No heavy physics.
+  // ==========================================================
+  if (!isNative) {
+    // 1. If browser supports View Transitions (Chrome/Edge/Arc), use them.
+    // They are native to the browser engine and extremely performant.
+    if (!isGesture && 'startViewTransition' in document) {
+      return createViewTransitionWrapper(transitionOpts);
+    }
+    
+    // 2. Fallback for Web (Safari / Firefox / Old Chrome)
+    // Just use a simple, fast Fade. 
+    // DO NOT use iOS Slide or Android Zoom here, it feels "fake" on web.
+    return createMacFadeTransition(transitionOpts);
   }
 
-  // Mobile/Gesture use Optimized CSS3 Transforms (Simulated Snapshots via 'contain: strict')
-  if (platform === 'ios' || isGesture) return createIOSTransition(transitionOpts, isRTL);
+  // ==========================================================
+  // B. NATIVE APP STRATEGY (iOS / Android IPA/APK)
+  // Goal: Feel exactly like the OS.
+  // ==========================================================
+
+  // 1. iOS Logic (or any Gesture Swipes on Native)
+  if (platform === 'ios' || isGesture) {
+    return createIOSTransition(transitionOpts, isRTL);
+  }
   
+  // 2. Android Logic
   if (platform === 'android') {
     const version = getAndroidVersion();
+    // Android 14+ Predictive Back Style
     if (version >= 14) return createAndroidFadeForwardsTransition(transitionOpts, isRTL);
+    // Modern Android Zoom
     if (version >= 10) return createAndroidZoomTransition(transitionOpts);
+    // Old Android
     if (version === 9) return createAndroidOpenUpTransition(transitionOpts);
     return createAndroidFadeUpTransition(transitionOpts);
   }
 
+  // Default Fallback (Should rarely be reached in Native)
   return createMacFadeTransition(transitionOpts);
 };
 

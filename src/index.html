@@ -2,56 +2,227 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <title>رقيم</title>
+    <title>Rqeim</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />    
     
-    <!-- Mobile App Meta Tags -->
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
-    />    
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="msapplication-tap-highlight" content="no" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="رقيم" />
-    <meta name="application-name" content="Rqeim" />
-    
-    <!-- Theme Color (dynamic via JS) -->
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-    
-    <!-- Prevent FOUC: Initialize theme & language BEFORE any CSS/JS loads -->
-    <script>
-      (function() {
-        // Theme initialization
-        const appearance = localStorage.getItem('appearance') || 'system';
-        let isDark = false;
-        
-        if (appearance === 'dark') {
-          isDark = true;
-        } else if (appearance === 'system') {
-          isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        }
-        
-        if (isDark) {
-          document.documentElement.classList.add('dark');
-        }
-        
-        // Language initialization
-        const language = localStorage.getItem('language') || 'ar';
-        document.documentElement.lang = language;
-        document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-      })();
-    </script>
-    
-    <!-- Icons & Manifest -->
-    <link rel="icon" type="image/x-icon" href="./assets/icon/favicon.ico" />
-    <link rel="apple-touch-icon" href="./assets/icon/icon-192.png" />
-    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" href="./assets/icon/favicon.ico" />
+
+    <link rel="modulepreload" href="./app.js" />
+
+    <style>
+      :root {
+        --bg-color: #ffffff;
+        --bar-track: #f1f1f1;
+        --bar-fill: #111111;
+        --text-meta: #888888;
+        --text-alert: #e67e22;
+        --text-danger: #e74c3c;
+      }
+      html.dark :root {
+        --bg-color: #000000;
+        --bar-track: #222222;
+        --bar-fill: #ffffff;
+        --text-meta: #666666;
+      }
+
+      body { margin: 0; background: var(--bg-color); overflow: hidden; }
+
+      #app-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bg-color);
+        transition: opacity 0.4s ease-out, visibility 0.4s;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+
+      #app-loader.vanish { opacity: 0; visibility: hidden; }
+
+      .brand-logo {
+        width: 64px; height: 64px; background: var(--bar-track); border-radius: 12px; margin-bottom: 30px;
+      }
+
+      .progress-track {
+        width: 220px; height: 3px; background: var(--bar-track); border-radius: 6px; overflow: hidden; position: relative;
+      }
+
+      .progress-fill {
+        height: 100%; width: 0%; background: var(--bar-fill); border-radius: 6px;
+        transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1); will-change: width;
+      }
+
+      .meta-data {
+        margin-top: 15px; 
+        font-size: 12px; 
+        font-weight: 600; 
+        color: var(--text-meta);
+        font-variant-numeric: tabular-nums; 
+        opacity: 0.9; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        gap: 8px;
+        min-height: 40px; /* To prevent layout shift when messages appear */
+      }
+      
+      .network-status {
+        font-size: 11px;
+        color: var(--text-alert);
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-weight: 500;
+      }
+      .network-status.visible { opacity: 1; }
+      .network-status.error { color: var(--text-danger); }
+    </style>
   </head>
   <body>
+    
     <div id="app"></div>
-    <script src="./app.js" type="module"></script>
+
+    <div id="app-loader">
+      
+      <div class="progress-track">
+        <div class="progress-fill" id="p-bar"></div>
+      </div>
+      
+      <div class="meta-data">
+        <span id="p-percent">0%</span>
+        <div id="net-msg" class="network-status"></div>
+      </div>
+    </div>
+
+    <script>
+      (function() {
+        // نستخدم هذا الرقم فقط للحسابات الداخلية للنسبة المئوية
+        const ESTIMATED_SIZE_MB = 3.5; 
+        const ESTIMATED_BYTES = ESTIMATED_SIZE_MB * 1024 * 1024;
+        
+        const loader = document.getElementById('app-loader');
+        const bar = document.getElementById('p-bar');
+        const percentTxt = document.getElementById('p-percent');
+        const netMsg = document.getElementById('net-msg');
+        
+        let loadedBytes = 0;
+        let currentPercent = 0;
+        let lastActivity = Date.now(); 
+
+        // --- UPDATE UI ---
+        function updateDisplay(newBytes) {
+          lastActivity = Date.now(); 
+          loadedBytes += newBytes;
+          
+          let percent = (loadedBytes / ESTIMATED_BYTES) * 100;
+          if (percent > 90) percent = 90 + (percent - 90) * 0.1;
+          
+          if (percent > currentPercent) {
+            currentPercent = percent;
+            bar.style.width = currentPercent + '%';
+            percentTxt.textContent = Math.floor(currentPercent) + '%';
+            // تمت إزالة تحديث النص الخاص بالحجم (MB)
+          }
+        }
+
+        // --- NETWORK MONITORING ---
+        if (window.PerformanceObserver) {
+          const observer = new PerformanceObserver((list) => {
+            list.getEntries().forEach((entry) => {
+              let chunkSize = entry.transferSize;
+              if (chunkSize === 0) chunkSize = entry.decodedBodySize || 50000;
+              
+              if (['script', 'link', 'fetch', 'img', 'css'].includes(entry.initiatorType)) {
+                 updateDisplay(chunkSize);
+              }
+            });
+          });
+          observer.observe({ entryTypes: ['resource'] });
+        }
+
+        // --- INTELLIGENT CONNECTION DETECTION ---
+        function showMessage(msg, type = 'warning') {
+          netMsg.textContent = msg;
+          netMsg.className = 'network-status visible';
+          if (type === 'error') netMsg.classList.add('error');
+        }
+
+        function hideMessage() {
+          netMsg.classList.remove('visible');
+        }
+
+        // 1. Hardware API Detection
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        function checkConnectionType() {
+          if (connection) {
+            const type = connection.effectiveType;
+            if (type === '3g') {
+              showMessage('اتصال الإنترنت ضعيف (3G)');
+            } else if (type === '2g' || type === 'slow-2g') {
+              showMessage('الاتصال بطيء جداً', 'error');
+            } else {
+              hideMessage();
+            }
+          }
+        }
+
+        if (connection) {
+          checkConnectionType();
+          connection.addEventListener('change', checkConnectionType);
+        }
+
+        // 2. Heuristic Detection (Activity Watchdog)
+        setInterval(() => {
+          const timeSinceLastByte = Date.now() - lastActivity;
+          if (timeSinceLastByte > 3000 && currentPercent < 80) {
+            if (!connection || connection.effectiveType === '4g') {
+               showMessage('جاري محاولة الاتصال بالشبكة...');
+               updateDisplay(1000); // Fake progress to keep hope alive
+            }
+          } else if (timeSinceLastByte < 1000) {
+             if (connection && connection.effectiveType === '4g') hideMessage();
+             else if (!connection) hideMessage();
+          }
+        }, 1000);
+
+        // --- RETRY LOGIC ---
+        async function loadAppWithRetry(retries = 3) {
+          try {
+            await import('./app.js');
+          } catch (err) {
+            console.error('Failed to load app chunk:', err);
+            if (retries > 0) {
+              showMessage(`فشل التحميل، محاولة ${4 - retries}...`, 'error');
+              setTimeout(() => { loadAppWithRetry(retries - 1); }, (4 - retries) * 1500);
+            } else {
+              showMessage('لا يوجد اتصال بالإنترنت', 'error');
+            }
+          }
+        }
+
+        // --- COMPLETION ---
+        window.appReady = function() {
+          bar.style.width = '100%';
+          percentTxt.textContent = '100%';
+          hideMessage();
+
+          setTimeout(() => {
+            loader.classList.add('vanish');
+            setTimeout(() => { loader.remove(); }, 450);
+          }, 250);
+        };
+        
+        setTimeout(() => { 
+            if(document.body.contains(loader)) window.appReady(); 
+        }, 25000); 
+
+        loadAppWithRetry();
+
+      })();
+    </script>
   </body>
 </html>
