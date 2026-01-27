@@ -36,20 +36,20 @@ const i18n = createI18n({
 const isIOS = isPlatform('ios');
 const isAndroid = isPlatform('android');
 
-// Initialize Power Mode Detection
-async function initPowerMode() {
-  try {
-    const { lowPowerModeEnabled } = await PowerMode.lowPowerModeEnabled();
-    setLowPowerMode(lowPowerModeEnabled);
-    console.log('[PowerMode] Low Power Mode:', lowPowerModeEnabled);
-  } catch (error) {
-    // Plugin not available (web/desktop)
-    setLowPowerMode(false);
-  }
-}
+// // Initialize Power Mode Detection
+// async function initPowerMode() {
+//   try {
+//     const { lowPowerModeEnabled } = await PowerMode.lowPowerModeEnabled();
+//     setLowPowerMode(lowPowerModeEnabled);
+//     console.log('[PowerMode] Low Power Mode:', lowPowerModeEnabled);
+//   } catch (error) {
+//     // Plugin not available (web/desktop)
+//     setLowPowerMode(false);
+//   }
+// }
 
-// Check power mode on app start
-initPowerMode();
+// // Check power mode on app start
+// initPowerMode();
 
 // Create Vue app with Ionic configuration
 const app = createApp(App)

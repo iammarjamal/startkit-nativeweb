@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { IonPage, IonContent } from '@ionic/vue';
 import { ChevronLeft } from 'lucide-vue-next';
+import { useMediaQuery } from '@vueuse/core';
 
 defineProps<{
     canBack?: boolean;
 }>();
 const goBack = () => history.back();
+
+const isDesktop = useMediaQuery('(min-width: 1024px)');
 </script>
 
 <template>
     <ion-page>
         <ion-content>
 
-            <header v-if="canBack"
+            <header v-if="canBack && !isDesktop"
                 class="fixed top-0 ltr:left-0 rtl:right-0 z-50 px-5 pt-[max(env(safe-area-inset-top)+5px,12px)]">
 
                 <button @click="goBack" class="
