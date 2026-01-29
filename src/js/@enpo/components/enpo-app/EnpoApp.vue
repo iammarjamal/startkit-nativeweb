@@ -1,4 +1,4 @@
-<script setup lang="ts" vapor>
+<script setup lang="ts">
 import { onMounted, nextTick } from 'vue';
 import { RouterView } from "vue-router";
 

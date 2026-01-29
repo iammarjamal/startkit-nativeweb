@@ -168,7 +168,6 @@ useBackOnApp({
 
 .ios-forward-enter-active {
     z-index: 10;
-    box-shadow: calc(-25px * var(--dir)) 0 40px rgba(0, 0, 0, 0.5);
 }
 
 .ios-forward-leave-active {
@@ -190,7 +189,6 @@ useBackOnApp({
 
 .ios-back-leave-active {
     z-index: 10;
-    box-shadow: calc(-25px * var(--dir)) 0 40px rgba(0, 0, 0, 0.5);
 }
 
 .ios-back-enter-from {
