@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Preferences } from '@/components/ui/preferences';
 import { useAppearance } from '@/composables/useTheme';
 import { useRouter } from 'vue-router';
-import { Screen } from '@/components/ui/screen';
+import { Screen } from '@/@enpo/components/screen';
 
 const { t } = useI18n();
 const { appearance } = useAppearance();
@@ -108,7 +108,7 @@ const btnAnim = (i: number) => ({
                             class="h-12 w-full bg-gradient-to-r from-primary to-primary/90 text-base font-semibold shadow-lg transition-all hover:from-primary/90 hover:to-primary hover:shadow-xl">
                             <span class="flex-1 text-start">{{ loading === 'login' ? t('loading') :
                                 t('continue')
-                            }}</span>
+                                }}</span>
                             <Spinner v-if="loading === 'login'" />
                             <Icon v-else icon="solar:login-3-bold" class="size-7" />
                         </Button>
@@ -123,7 +123,7 @@ const btnAnim = (i: number) => ({
                         <div class="relative flex justify-center text-xs uppercase">
                             <span class="bg-background px-3 font-medium tracking-wider text-muted-foreground">{{
                                 t('or')
-                            }}</span>
+                                }}</span>
                         </div>
                     </Motion>
 
@@ -134,7 +134,7 @@ const btnAnim = (i: number) => ({
                             class="h-12 w-full border-2 text-base font-semibold transition-all hover:bg-secondary/50">
                             <span class="flex-1 text-start">{{ loading === p.id ? t('loading') :
                                 t(`provider.${p.id}`)
-                            }}</span>
+                                }}</span>
                             <Spinner v-if="loading === p.id" />
                             <Icon v-else :icon="p.icon" class="size-7" />
                         </Button>

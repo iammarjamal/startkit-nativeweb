@@ -12,15 +12,12 @@ import './css/app.css'
 import { createApp } from 'vue'
 import { createI18n } from 'vue-i18n';
 import { IonicVue, isPlatform } from '@ionic/vue';
-import { initializeAppLifeCycle } from './js/composables/useLifeCycle';
-import router from './js/router';
+import { initializeAppLifeCycle } from '@/composables/useLifeCycle';
+import router from '@/@enpo/router/router';
 import App from '@/app.vue';
 
 // Flutter Native Animation
-import { flutterNativeAnimation, setLowPowerMode } from '@/plugins/transition';
-
-// Power Mode Plugin (Capacitor)
-import { PowerMode } from 'power-mode';
+import { flutterNativeAnimation } from '@/@enpo/router/transition';
 
 // Initialize theme and language BEFORE Vue app is created
 const { language } = initializeAppLifeCycle();

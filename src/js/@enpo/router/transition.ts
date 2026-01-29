@@ -1,9 +1,8 @@
 import { createAnimation, Animation, AnimationBuilder } from '@ionic/vue';
 import { Capacitor } from '@capacitor/core';
 
-// ... (TRANSITION_CONFIG remains the same, no changes needed there) ...
 const TRANSITION_CONFIG = {
-  isLowPowerMode: false,
+  // تم إزالة isLowPowerMode
   isReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   DURATION: {
     IOS: 500,
@@ -12,8 +11,8 @@ const TRANSITION_CONFIG = {
     ANDROID_OPEN: 550,
     ANDROID_ZOOM: 280,
     ANDROID_FWD: 350,
-    LOW_POWER: 120,
     MAC_FADE: 200,
+    // تم إزالة LOW_POWER
   },
   CURVE: {
     IOS_FAST: 'cubic-bezier(0.32, 0.72, 0, 1)',
@@ -23,7 +22,7 @@ const TRANSITION_CONFIG = {
     ANDROID_EMPHASIZED: 'cubic-bezier(0.2, 0.0, 0.0, 1.0)',
     ANDROID_DECELERATE: 'cubic-bezier(0.0, 0.0, 0.2, 1.0)',
     ANDROID_ZOOM: 'cubic-bezier(0.35, 0.91, 0.33, 0.97)',
-    LOW_POWER: 'ease-in-out',
+    // تم إزالة LOW_POWER
   },
   GEOMETRY: {
     IOS_PARALLAX: 33,
@@ -35,21 +34,15 @@ const TRANSITION_CONFIG = {
   }
 };
 
-// ... (Listeners and State Management remain the same) ...
+// Listeners
 window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
   TRANSITION_CONFIG.isReducedMotion = e.matches;
 });
 
-export function setLowPowerMode(enabled: boolean): void {
-  TRANSITION_CONFIG.isLowPowerMode = enabled;
-}
-
-export function getLowPowerMode(): boolean {
-  return TRANSITION_CONFIG.isLowPowerMode;
-}
+// تم إزالة دوال setLowPowerMode و getLowPowerMode
 
 // ============================================================================
-// HELPER UTILITIES - OPTIMIZED FOR "SNAPSHOT" EFFECT
+// HELPER UTILITIES
 // ============================================================================
 
 const getPageElement = (el: HTMLElement): HTMLElement => {
@@ -70,15 +63,10 @@ const setInteractionLock = (isLocked: boolean) => {
 const createRootAnimation = (duration: number, easing: string): Animation => {
   const root = createAnimation().duration(duration).easing(easing);
   
-  // Freeze interactions during transition to prevent multi-touch glitches
   root.beforeAddWrite(() => setInteractionLock(true));
   root.onFinish(() => setInteractionLock(false));
   
   return root;
-};
-
-const shouldReduceMotion = (): boolean => {
-  return TRANSITION_CONFIG.isReducedMotion || TRANSITION_CONFIG.isLowPowerMode;
 };
 
 let _androidVersion: number | null = null;
@@ -89,15 +77,10 @@ const getAndroidVersion = (): number => {
   return _androidVersion;
 };
 
-/**
- * ⚡️ PERFORMANCE BOOSTER
- * This forces the browser to treat the element as a static image (Texture) during animation.
- * 'contain: strict' removes the element from the layout flow completely internally.
- */
 const getSnapshotStyles = () => ({
   'will-change': 'transform, opacity',
-  'contain': 'strict', // The Magic: Isolates layout, style, and paint.
-  'backface-visibility': 'hidden', // Forces GPU usage
+  'contain': 'strict',
+  'backface-visibility': 'hidden',
   'transform-style': 'preserve-3d'
 });
 
@@ -107,18 +90,9 @@ const clearSnapshotStyles = () => (['will-change', 'contain', 'backface-visibili
 // TRANSITION IMPLEMENTATIONS
 // ============================================================================
 
-/** 1. Low Power */
-function createLowPowerTransition(opts: any): Animation {
-  const root = createRootAnimation(TRANSITION_CONFIG.DURATION.LOW_POWER, TRANSITION_CONFIG.CURVE.LOW_POWER);
-  const enterEl = getPageElement(opts.enteringEl);
-  const leaveEl = getPageElement(opts.leavingEl);
-  
-  if (enterEl) root.addAnimation(createAnimation().addElement(enterEl).beforeRemoveClass('ion-page-invisible').fromTo('opacity', '0.5', '1'));
-  if (leaveEl) root.addAnimation(createAnimation().addElement(leaveEl).fromTo('opacity', '1', '0'));
-  return root;
-}
+// تم إزالة createLowPowerTransition بالكامل
 
-/** 2. iOS Cupertino - Optimized with Snapshotting */
+/** 1. iOS Cupertino - Optimized with Snapshotting */
 function createIOSTransition(opts: any, isRTL: boolean): Animation {
   const { enteringEl, leavingEl, direction, progressAnimation } = opts;
   const isBack = direction === 'back';
@@ -131,23 +105,18 @@ function createIOSTransition(opts: any, isRTL: boolean): Animation {
   const offScreen = isRTL ? -100 : 100;
   const parallax = isRTL ? TRANSITION_CONFIG.GEOMETRY.IOS_PARALLAX : -TRANSITION_CONFIG.GEOMETRY.IOS_PARALLAX;
 
-  // Shared Shadow Styles (Only apply shadow to the top layer)
   const shadowStyles = { 'box-shadow': isRTL ? '-5px 0 25px rgba(0,0,0,0.15)' : '-5px 0 25px rgba(0,0,0,0.15)' };
 
   if (enterEl) {
     const enterAnim = createAnimation().addElement(enterEl).beforeRemoveClass('ion-page-invisible');
-    
-    // APPLY SNAPSHOT OPTIMIZATION
     enterAnim.beforeStyles(getSnapshotStyles()).afterClearStyles(clearSnapshotStyles());
 
     if (isBack) {
-      // Back: Enter is BEHIND (Parallax) -> No Shadow needed usually, but logic kept simple
       enterAnim
         .beforeStyles({ 'z-index': '1' })
         .afterStyles({ 'z-index': '100' })
         .fromTo('transform', `translate3d(${parallax}%, 0, 0)`, 'translate3d(0, 0, 0)');
     } else {
-      // Forward: Enter is ON TOP -> Needs Shadow
       enterAnim
         .beforeStyles({ 'z-index': '50', ...shadowStyles })
         .afterClearStyles(['box-shadow'])
@@ -158,18 +127,14 @@ function createIOSTransition(opts: any, isRTL: boolean): Animation {
 
   if (leaveEl) {
     const leaveAnim = createAnimation().addElement(leaveEl);
-    
-    // APPLY SNAPSHOT OPTIMIZATION
     leaveAnim.beforeStyles(getSnapshotStyles()).afterClearStyles(clearSnapshotStyles());
 
     if (isBack) {
-      // Back: Leave is ON TOP -> Needs Shadow
       leaveAnim
         .beforeStyles({ 'z-index': '50', ...shadowStyles })
         .afterClearStyles(['box-shadow'])
         .fromTo('transform', 'translate3d(0, 0, 0)', `translate3d(${offScreen}%, 0, 0)`);
     } else {
-      // Forward: Leave is BEHIND (Parallax)
       leaveAnim
         .beforeStyles({ 'z-index': '1' })
         .fromTo('transform', 'translate3d(0, 0, 0)', `translate3d(${parallax}%, 0, 0)`);
@@ -180,7 +145,7 @@ function createIOSTransition(opts: any, isRTL: boolean): Animation {
   return root;
 }
 
-/** 3. Android Fade Up */
+/** 2. Android Fade Up */
 function createAndroidFadeUpTransition(opts: any): Animation {
   const root = createRootAnimation(TRANSITION_CONFIG.DURATION.ANDROID_FADE, TRANSITION_CONFIG.CURVE.ANDROID_EASE);
   const enterEl = getPageElement(opts.enteringEl);
@@ -189,7 +154,7 @@ function createAndroidFadeUpTransition(opts: any): Animation {
 
   if (enterEl) {
     const anim = createAnimation().addElement(enterEl).beforeRemoveClass('ion-page-invisible')
-      .beforeStyles(getSnapshotStyles()).afterClearStyles(clearSnapshotStyles()); // Optimization
+      .beforeStyles(getSnapshotStyles()).afterClearStyles(clearSnapshotStyles());
       
     if (opts.direction === 'back') anim.fromTo('opacity', '0', '1');
     else anim.fromTo('transform', `translate3d(0, ${offset}%, 0)`, 'translate3d(0, 0, 0)').fromTo('opacity', '0', '1');
@@ -197,7 +162,7 @@ function createAndroidFadeUpTransition(opts: any): Animation {
   }
   if (leaveEl) {
     const anim = createAnimation().addElement(leaveEl)
-      .beforeStyles(getSnapshotStyles()).afterClearStyles(clearSnapshotStyles()); // Optimization
+      .beforeStyles(getSnapshotStyles()).afterClearStyles(clearSnapshotStyles());
 
     if (opts.direction === 'back') anim.fromTo('transform', 'translate3d(0, 0, 0)', `translate3d(0, ${offset}%, 0)`).fromTo('opacity', '1', '0');
     else anim.fromTo('opacity', '1', '0');
@@ -206,7 +171,7 @@ function createAndroidFadeUpTransition(opts: any): Animation {
   return root;
 }
 
-/** 4. Android Open Up */
+/** 3. Android Open Up */
 function createAndroidOpenUpTransition(opts: any): Animation {
   const root = createRootAnimation(TRANSITION_CONFIG.DURATION.ANDROID_OPEN, TRANSITION_CONFIG.CURVE.ANDROID_DECELERATE);
   const enterEl = getPageElement(opts.enteringEl);
@@ -229,7 +194,7 @@ function createAndroidOpenUpTransition(opts: any): Animation {
   return root;
 }
 
-/** 5. Android Zoom */
+/** 4. Android Zoom */
 function createAndroidZoomTransition(opts: any): Animation {
   const root = createRootAnimation(TRANSITION_CONFIG.DURATION.ANDROID_ZOOM, TRANSITION_CONFIG.CURVE.ANDROID_ZOOM);
   const enterEl = getPageElement(opts.enteringEl);
@@ -252,7 +217,7 @@ function createAndroidZoomTransition(opts: any): Animation {
   return root;
 }
 
-/** 6. Android Fade Forwards */
+/** 5. Android Fade Forwards */
 function createAndroidFadeForwardsTransition(opts: any, isRTL: boolean): Animation {
   const root = createRootAnimation(TRANSITION_CONFIG.DURATION.ANDROID_FWD, TRANSITION_CONFIG.CURVE.ANDROID_EMPHASIZED);
   const enterEl = getPageElement(opts.enteringEl);
@@ -275,27 +240,23 @@ function createAndroidFadeForwardsTransition(opts: any, isRTL: boolean): Animati
   return root;
 }
 
-/** 7. Desktop Fallback */
+/** 6. Desktop/Fallback/Reduced Motion */
 function createMacFadeTransition(opts: any): Animation {
   const root = createRootAnimation(TRANSITION_CONFIG.DURATION.MAC_FADE, 'ease-out');
   const enterEl = getPageElement(opts.enteringEl);
   const leaveEl = getPageElement(opts.leavingEl);
   
-  // No strict containment needed for simple opacity fade, but 'will-change' helps
   if (enterEl) root.addAnimation(createAnimation().addElement(enterEl).beforeRemoveClass('ion-page-invisible').beforeStyles({ 'will-change': 'opacity' }).fromTo('opacity', '0', '1'));
   if (leaveEl) root.addAnimation(createAnimation().addElement(leaveEl).beforeStyles({ 'will-change': 'opacity' }).fromTo('opacity', '1', '0'));
   return root;
 }
 
-/** * 8. View Transition API Wrapper 
- * This natively handles "Snapshotting" via the browser engine.
- */
+/** 7. View Transition API Wrapper */
 function createViewTransitionWrapper(opts: any): Animation {
   const root = createRootAnimation(400, 'ease-in-out');
   const { enteringEl, leavingEl } = opts;
 
   root.beforeAddWrite(() => {
-    // If browser supports it, it AUTOMATICALLY snapshots the old and new states.
     if ('startViewTransition' in document) {
       // @ts-ignore
       const t = document.startViewTransition(() => {
@@ -322,60 +283,46 @@ export const flutterNativeAnimation: AnimationBuilder = (baseEl: any, opts: any)
     progressAnimation: opts.progressAnimation
   };
 
-  // 1. Accessibility & Low Power Check
-  if (shouldReduceMotion()) {
-    return createLowPowerTransition(transitionOpts);
+  // 1. Accessibility Check (Only Reduced Motion now)
+  // إذا كان المستخدم يطلب تقليل الحركة من إعدادات النظام، نستخدم الـ Fade البسيط
+  if (TRANSITION_CONFIG.isReducedMotion) {
+    return createMacFadeTransition(transitionOpts);
   }
 
   const isGesture = transitionOpts.progressAnimation === true;
   const isRTL = document.documentElement.dir === 'rtl';
   
-  // 🔥 THE FIX: Strict Native Check 🔥
-  // Capacitor.isNativePlatform() returns true ONLY for compiled iOS/Android apps.
-  // It returns false for Mobile Web / PWA.
   const isNative = Capacitor.isNativePlatform();
-  const platform = Capacitor.getPlatform(); // 'ios', 'android', 'web'
+  const platform = Capacitor.getPlatform();
 
   // ==========================================================
-  // A. WEB STRATEGY (Browser / PWA)
-  // Goal: Feel like a normal website. No heavy physics.
+  // A. WEB STRATEGY
   // ==========================================================
   if (!isNative) {
-    // 1. If browser supports View Transitions (Chrome/Edge/Arc), use them.
-    // They are native to the browser engine and extremely performant.
     if (!isGesture && 'startViewTransition' in document) {
       return createViewTransitionWrapper(transitionOpts);
     }
-    
-    // 2. Fallback for Web (Safari / Firefox / Old Chrome)
-    // Just use a simple, fast Fade. 
-    // DO NOT use iOS Slide or Android Zoom here, it feels "fake" on web.
     return createMacFadeTransition(transitionOpts);
   }
 
   // ==========================================================
-  // B. NATIVE APP STRATEGY (iOS / Android IPA/APK)
-  // Goal: Feel exactly like the OS.
+  // B. NATIVE APP STRATEGY
   // ==========================================================
 
-  // 1. iOS Logic (or any Gesture Swipes on Native)
+  // iOS Logic
   if (platform === 'ios' || isGesture) {
     return createIOSTransition(transitionOpts, isRTL);
   }
   
-  // 2. Android Logic
+  // Android Logic
   if (platform === 'android') {
     const version = getAndroidVersion();
-    // Android 14+ Predictive Back Style
     if (version >= 14) return createAndroidFadeForwardsTransition(transitionOpts, isRTL);
-    // Modern Android Zoom
     if (version >= 10) return createAndroidZoomTransition(transitionOpts);
-    // Old Android
     if (version === 9) return createAndroidOpenUpTransition(transitionOpts);
     return createAndroidFadeUpTransition(transitionOpts);
   }
 
-  // Default Fallback (Should rarely be reached in Native)
   return createMacFadeTransition(transitionOpts);
 };
 

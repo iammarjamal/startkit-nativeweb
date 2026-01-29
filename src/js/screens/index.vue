@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { Spinner } from "@/components/ui/spinner";
+import EnpoLoading from "@/@enpo/components/enpo-loading/EnpoLoading.vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 
 onMounted(() => {
     setTimeout(() => {
-        router.push("/auth");
+        router.replace("/auth");
     }, 2000);
 });
 </script>
 
 <template>
     <div class="flex items-center justify-center h-screen">
-        <Spinner class="size-12" />
+        <EnpoLoading />
     </div>
 </template>

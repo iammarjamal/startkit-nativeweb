@@ -12,7 +12,6 @@ const isDesktop = useMediaQuery('(min-width: 1024px)');
 NProgress.configure({ showSpinner: false, speed: 500 });
 
 let timer: any = null;
-// تقليل الوقت لضمان الظهور في التنقلات المتوسطة
 const DELAY_MS = 150; 
 
 export function useNavigationLoader() {

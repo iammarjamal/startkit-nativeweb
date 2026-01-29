@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Screen } from '@/components/ui/screen';
+import { Screen } from '@/@enpo/components/screen';
 
 
 interface Props {
@@ -224,7 +224,7 @@ const slotAnim = (index: number) => ({
                                 class="h-12 w-full bg-gradient-to-r from-primary to-primary/90 text-base font-semibold shadow-lg transition-all hover:from-primary/90 hover:to-primary hover:shadow-xl disabled:opacity-50">
                                 <span class="flex-1 text-start">{{ form.processing ? t('verifying') :
                                     t('verify')
-                                }}</span>
+                                    }}</span>
                                 <Spinner v-if="form.processing" />
                                 <Icon v-else icon="solar:check-circle-bold" class="size-5" />
                             </Button>
@@ -264,7 +264,7 @@ const slotAnim = (index: number) => ({
                             <Icon icon="solar:shield-warning-bold" class="size-4 text-amber-600 dark:text-amber-400" />
                         </Motion>
                         <span class="text-xs font-medium text-amber-700 dark:text-amber-300">{{ t('tip')
-                        }}</span>
+                            }}</span>
                     </Motion>
                 </CardContent>
             </Card>

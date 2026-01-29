@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="ios-mode">
   <head>
     <meta charset="UTF-8" />
     <title>Rqeim</title>
@@ -8,8 +8,6 @@
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="./assets/icon/favicon.ico" />
-
-    <link rel="modulepreload" href="./app.js" />
 
     <style>
       :root {
@@ -192,7 +190,7 @@
         // --- RETRY LOGIC ---
         async function loadAppWithRetry(retries = 3) {
           try {
-            await import('./app.js');
+            await import('./app.ts');
           } catch (err) {
             console.error('Failed to load app chunk:', err);
             if (retries > 0) {
@@ -224,5 +222,7 @@
 
       })();
     </script>
+
+    <script type="module" src="./app.ts"></script>
   </body>
 </html>

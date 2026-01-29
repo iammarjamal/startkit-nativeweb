@@ -1,5 +1,5 @@
-<script setup lang="ts">
-import { useNavigationLoader } from '@/composables/useNavigationLoader';
+<script setup lang="ts" vapor>
+import { useNavigationLoader } from '@/@enpo/router/useNavigationLoader';
 
 // نستدعي الحالة المشتركة
 const { isMobileLoading } = useNavigationLoader();

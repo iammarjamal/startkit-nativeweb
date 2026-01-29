@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterView } from "@/components/ui/router-app";
+import { RouterView } from "@/@enpo/components/enpo-router";
 </script>
 
 <template>

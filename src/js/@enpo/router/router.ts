@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { routes } from 'vue-router/auto-routes';
-import { useNavigationLoader } from '@/composables/useNavigationLoader';
+import { useNavigationLoader } from '@/@enpo/router/useNavigationLoader';
 
 const router = createRouter({
   history: createWebHistory(),

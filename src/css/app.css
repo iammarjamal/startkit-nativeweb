@@ -29,6 +29,15 @@
     font-family: 'IBM Plex Sans Arabic', sans-serif !important;
 }
 
+button, a,
+[role="button"] {
+  touch-action: none !important;
+    -webkit-touch-callout: none; 
+    -webkit-user-select: none; 
+    touch-action: manipulation;
+    cursor: pointer;
+}
+
 .active-press:active {
   opacity: 0.7;
   transform: scale(0.98);

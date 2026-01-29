@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 import { IonPage, IonContent } from '@ionic/vue';
 import { ChevronLeft } from 'lucide-vue-next';
 import { useMediaQuery } from '@vueuse/core';
